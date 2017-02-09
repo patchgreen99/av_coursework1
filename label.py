@@ -19,16 +19,19 @@ try:
 	read_dictionary = np.load('labels.npy').item()
 except:
 	print "No labels found"
+	print "Creating new file called labels.npy"
+
 
 sample = np.random.choice(images,args.c)
-d = read_dictionary
+d = read_dictionary or {}
+np.save('labels.npy', d) 
 images =[]
 key = None
 for   image_path in sample:
 	if key == ord("q"): break
 	im1 = cv2.imread(image_path)
 	filename = os.path.basename(image_path)
-	print filename
+	print  filename, "labeled as ", d.get(filename)
 	while 1:
 		cv2.imshow("winname", im1)
 		key = None
