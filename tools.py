@@ -55,6 +55,8 @@ def avg_win(w, img):
     # This funciton sums up the activity white pixels in the window and divides by the total area
     return float(np.sum(img[w[0][1]:w[1][1], w[0][0]:w[1][0]])) / ((w[1][0] - w[0][0]) * (w[1][1] - w[0][1]))
 
+def area(w):
+    return (w[1][0] - w[0][0]) * (w[1][1] - w[0][1])
 
 def getimages(args):
     try:

@@ -23,12 +23,16 @@ parser.add_argument('-w', action="store", dest="w", type=int, default=1, help="T
 parser.add_argument('-p', action="store", dest="folder", type=str, help="Path to images")
 args = parser.parse_args()
 
+
 errors = []
+room = roomimage()
+binaryroom = binroomimage()
+
 with file("transpoints.txt","w") as f:
     x=0
     for waittime,im3,im4,im_label in getimages(args):
 
-        room = roomimage(im3)
+        room.image = im3
 
         # remove noise
 
@@ -42,19 +46,19 @@ with file("transpoints.txt","w") as f:
         thresh1 = cv2.erode(thresh1, (1, 1), iterations=3)
         thresh1 = cv2.dilate(thresh1, (1, 1), iterations=4)
 
-        binaryroom = binroomimage(thresh1)
+        binaryroom.image = thresh1
 
-        office_activity = avg_win(room.office, thresh1)
-        cab_activity = avg_win(room.cabinet, thresh1)
-        door_activity = avg_win(room.door, thresh1)
-        total_activity = avg_win(room.total, thresh1)
+        office_activity = avg_win(room.office, binaryroom.image)
+        cab_activity = avg_win(room.cabinet, binaryroom.image)
+        door_activity = avg_win(room.door, binaryroom.image)
+        total_activity = avg_win(room.total, binaryroom.image)
 
 
-        print total_activity
+        #print total_activity
         CoM = None
         CoM1 = None
         CoM2 = None
-        center_of_mass = None
+        swc1, swc2,center_of_mass = None, None, None
         # pass 1
         if total_activity > 0.05:
             try:
@@ -72,10 +76,10 @@ with file("transpoints.txt","w") as f:
                 center_of_mass = [win1[0][0] + int(CoM2[0]), win1[0][1] + int(CoM2[1])]
                 swc2, win2 = avg_win_center(center_of_mass, 50, binaryroom.image)
 
-                print "act:", swc, swc1
+                #print "act:", swc, swc1
 
             except:
-                print "Error or Empty", CoM, CoM1, CoM2
+                #print "Error or Empty", CoM, CoM1, CoM2
                 waittime = 0
 
             binaryroom.draw(win, win1, win2)
@@ -84,7 +88,7 @@ with file("transpoints.txt","w") as f:
             print "No activity detected"
 
         room.changestate(office_activity, cab_activity, door_activity, total_activity)
-        # room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
 
         if waittime == 0 :
@@ -92,11 +96,13 @@ with file("transpoints.txt","w") as f:
             print "DOOR", "        OFFICE", "          Cabinet"
             print door_activity, office_activity, cab_activity
             if center_of_mass and swc2:
-                room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
                 print "Total      ", " Large  ", "    Medium", "       Small"
-                print total_activity, swc, swc1, swc2
+                print total_activity, swc, swc1, swc2, center_of_mass
             if im_label[0] and center_of_mass:
                 errors.append(eucl_dist(center_of_mass,im_label[0]))
+            if  not center_of_mass and not im_label[0]:
+                errors.append(0)
+
 
 
 
