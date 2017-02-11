@@ -63,7 +63,7 @@ def getimages(args):
     images = sorted(glob.glob("chroma/*.jpg"))
 
     if args.folder:
-        orig = sorted(glob.glob(args.folder + "/*.jpg"))
+        orig = sorted(glob.glob(args.folder+"/*.jpg"))
     works = args.c or 0
     waittime = args.w
 
@@ -81,18 +81,17 @@ def getimages(args):
             waittime = args.w
         # read 2 chromaticity images and computer their absolute difference
         # or do on the spot
-        try:
-            im3 = cv2.imread(orig[x + 1])
-            im4 = cv2.imread(orig[x])
-            if works == 1:
-                pass
-            # im1 = toChroma2(im4)
-            # im2 = toChroma2(im3)
-            else:
-                im1 = cv2.imread(images[x])
-                im2 = cv2.imread(images[x + 1])
-        except:
-            continue
+
+        im3 = cv2.imread(orig[x + 1])
+        im4 = cv2.imread(orig[x])
+        if works == 1:
+            pass
+        # im1 = toChroma2(im4)
+        # im2 = toChroma2(im3)
+        else:
+            im1 = cv2.imread(images[x])
+            im2 = cv2.imread(images[x + 1])
+
 
         yield waittime, im3, im4
 
