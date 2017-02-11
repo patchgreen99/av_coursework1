@@ -54,6 +54,7 @@ with file("transpoints.txt","w") as f:
         CoM = None
         CoM1 = None
         CoM2 = None
+        center_of_mass = None
         # pass 1
         if total_activity > 0.05:
             try:
@@ -73,10 +74,6 @@ with file("transpoints.txt","w") as f:
 
                 print "act:", swc, swc1
 
-                room.draw(swc1, swc2, center_of_mass,office_activity, cab_activity, door_activity)
-
-
-
             except:
                 print "Error or Empty", CoM, CoM1, CoM2
                 waittime = 0
@@ -85,6 +82,9 @@ with file("transpoints.txt","w") as f:
 
         else:
             print "No activity detected"
+
+        room.changestate(office_activity, cab_activity, door_activity, total_activity)
+        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
 
 
