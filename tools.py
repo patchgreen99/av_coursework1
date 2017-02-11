@@ -11,6 +11,11 @@ def fix_win(w, limits=(1280, 720)):
     return ((w1, w2), (w3, w4))
 
 
+def eucl_dist(p1,p2):
+    dx = np.abs(p1[0] - p2[0])
+    dy = np.abs(p1[1] - p2[1])
+    return np.sqrt(dx*dx + dy*dy)
+
 def clip(img, w):
     return img[w[0][1]:w[1][1], w[0][0]:w[1][0]]
 
@@ -53,7 +58,7 @@ def avg_win(w, img):
 
 def getimages(args):
     try:
-        read_dictionary = np.load('labels.npy').item()
+        read_dictionary = np.load('labels_xy.npy').item()
     except:
         print "No labels found"
 
@@ -72,13 +77,14 @@ def getimages(args):
         # skip first x frames using -fs
         if x < args.f: continue
         print "Image:", x, "of ", len(orig), orig[x + 1][32:]
-        leabel = labels.get(os.path.basename(orig[x + 1]))
+        label = labels.get(os.path.basename(orig[x + 1]))
         # Pause on labeled images
-        if leabel:
-            print "LABLED IMAGE:", leabel
+        if label:
+            print "LABLED IMAGE:", label
             waittime = 0
         else:
             waittime = args.w
+            label = None
         # read 2 chromaticity images and computer their absolute difference
         # or do on the spot
 
@@ -93,7 +99,7 @@ def getimages(args):
             im2 = cv2.imread(images[x + 1])
 
 
-        yield waittime, im3, im4
+        yield waittime, im3, im4 , label
 
 
 

@@ -23,10 +23,10 @@ parser.add_argument('-w', action="store", dest="w", type=int, default=1, help="T
 parser.add_argument('-p', action="store", dest="folder", type=str, help="Path to images")
 args = parser.parse_args()
 
-
+errors = []
 with file("transpoints.txt","w") as f:
     x=0
-    for waittime,im3,im4 in getimages(args):
+    for waittime,im3,im4,im_label in getimages(args):
 
         room = roomimage(im3)
 
@@ -84,16 +84,22 @@ with file("transpoints.txt","w") as f:
             print "No activity detected"
 
         room.changestate(office_activity, cab_activity, door_activity, total_activity)
-        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+        # room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
 
-
-        if waittime == 0:
+        if waittime == 0 :
             print "ACTIVITY"
             print "DOOR", "        OFFICE", "          Cabinet"
             print door_activity, office_activity, cab_activity
-            print "Total      ", " Large  ", "    Medium", "       Small"
-            print total_activity, swc, swc1, swc2
+            if center_of_mass and swc2:
+                room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+                print "Total      ", " Large  ", "    Medium", "       Small"
+                print total_activity, swc, swc1, swc2
+            if im_label[0] and center_of_mass:
+                errors.append(eucl_dist(center_of_mass,im_label[0]))
+
+
+
 
         # SHOW
         # Fast
@@ -104,11 +110,12 @@ with file("transpoints.txt","w") as f:
 
         except:
             pass
-        key = cv2.waitKey(1) & 0xFF
+        key = cv2.waitKey(waittime) & 0xFF
         if key == ord("q"):
             break
 
         x+=1
+    print "ERRORS", errors, "SUM" , sum(errors)
         # Cool
         # im1,im2,im3,im4 =
         # try:
