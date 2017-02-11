@@ -6,7 +6,7 @@ class roomimage:
     def __init__(self):
         self.image = None
         # important locations
-        self.office = ((400, 200), (650, 550))
+        self.office = ((360, 120), (650, 580))
         self.cabinet = ((850, 180), (1200, 700))
         self.door = ((0, 120), (300, 720))
         self.total = ((0, 0), (1280, 720))
@@ -29,6 +29,7 @@ class roomimage:
                         "outside_the_room":[0,0,0,door_activity,no_activity,0],
                         "start"           :[office_activity,cab_activity,room_activity,door_activity,no_activity,0]}
         decision = np.array(transitions[self.states[self.curstate]])
+        # THIS SOMETIMES fails and defaults to 0 so when we are outside we just straight to the desk
         self.curstate = np.argmax(decision/np.sum(decision))
         return self.tag[self.curstate]
 
@@ -39,6 +40,8 @@ class roomimage:
                 cv2.circle(self.image, tuple(center_of_mass), 50, (0, 255, 25), thickness=-1)
             elif swc2 and center_of_mass and swc2 > 0.01 and swc1 > 0.005:
                 cv2.circle(self.image, tuple(center_of_mass), 50, (0, 25, 255), thickness=-1)
+            else:
+                cv2.circle(self.image, tuple(center_of_mass), 50, (182, 24, 255), thickness=-1)
 
 
 

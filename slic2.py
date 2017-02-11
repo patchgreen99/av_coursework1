@@ -27,11 +27,14 @@ args = parser.parse_args()
 errors = []
 room = roomimage()
 binaryroom = binroomimage()
-
+prev_com = None
+center_of_mass = None
+miss_detections = []
+state = None
 with file("transpoints.txt","w") as f:
     x=0
     for waittime,im3,im4,im_label in getimages(args):
-
+        prev_com = center_of_mass
         room.image = im3
 
         # remove noise
@@ -85,16 +88,27 @@ with file("transpoints.txt","w") as f:
             binaryroom.draw(win, win1, win2)
 
         else:
+            center_of_mass = None
             print "No activity detected"
 
-        room.changestate(office_activity, cab_activity, door_activity, total_activity)
-        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+        if state and state == "outside" and total_activity > 1:
+            state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
+        elif state == "outside":
+            pass
+            # state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
+        else :
+            state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
+        print state
+        if not center_of_mass and prev_com != None:
+            if state in ["desk","cabinet","room"]:
+                center_of_mass = tuple(prev_com)
 
+        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
         if waittime == 0 :
             print "ACTIVITY"
-            print "DOOR", "        OFFICE", "          Cabinet"
-            print door_activity, office_activity, cab_activity
+            print "DOOR", "        OFFICE", "          Cabinet" , "COM"
+            print door_activity, office_activity, cab_activity, center_of_mass
             if center_of_mass and swc2:
                 print "Total      ", " Large  ", "    Medium", "       Small"
                 print total_activity, swc, swc1, swc2, center_of_mass
@@ -102,6 +116,10 @@ with file("transpoints.txt","w") as f:
                 errors.append(eucl_dist(center_of_mass,im_label[0]))
             if  not center_of_mass and not im_label[0]:
                 errors.append(0)
+            if center_of_mass and not im_label[0]:
+                miss_detections.append(x)
+            waittime = 10
+
 
 
 
@@ -121,7 +139,8 @@ with file("transpoints.txt","w") as f:
             break
 
         x+=1
-    print "ERRORS", errors, "SUM" , sum(errors)
+    print "Average error (pixels)" , np.average(errors)
+    print "Missdetected frames", miss_detections
         # Cool
         # im1,im2,im3,im4 =
         # try:
