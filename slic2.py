@@ -18,7 +18,7 @@ cv2.namedWindow("Final", 0)
 
 parser = argparse.ArgumentParser(description='Basic Single Person Motion Tracker')
 parser.add_argument('-c', action="store", dest="c", type=int, help="Convert To Chroma")
-parser.add_argument('-f', action="store", dest="f", type=int, help="Frame to Start")
+parser.add_argument('-f', action="store", dest="f", type=int, help="Frame to Start", default = 0)
 parser.add_argument('-w', action="store", dest="w", type=int, default=1, help="Time Per frame")
 parser.add_argument('-p', action="store", dest="folder", type=str, help="Path to images")
 args = parser.parse_args()
@@ -32,7 +32,7 @@ center_of_mass = None
 miss_detections = []
 state = None
 with file("transpoints.txt","w") as f:
-    x=0
+    x=args.f
     for waittime,im3,im4,im_label in getimages(args):
         prev_com = center_of_mass
         room.image = im3
@@ -91,10 +91,13 @@ with file("transpoints.txt","w") as f:
             center_of_mass = None
             print "No activity detected"
 
+        # USE the state machine to decide whether the position is valid
         if state and state == "outside" and total_activity > 1:
             state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
+            center_of_mass = None
         elif state == "outside":
             pass
+            center_of_mass = None
             # state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
         else :
             state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
@@ -113,12 +116,14 @@ with file("transpoints.txt","w") as f:
                 print "Total      ", " Large  ", "    Medium", "       Small"
                 print total_activity, swc, swc1, swc2, center_of_mass
             if im_label[0] and center_of_mass:
-                errors.append(eucl_dist(center_of_mass,im_label[0]))
+                error_dist = eucl_dist(center_of_mass,im_label[0])
+                errors.append(error_dist*error_dist)
             if  not center_of_mass and not im_label[0]:
                 errors.append(0)
+            waittime = 10
             if center_of_mass and not im_label[0]:
                 miss_detections.append(x)
-            waittime = 10
+                waittime = 0
 
 
 
@@ -139,7 +144,7 @@ with file("transpoints.txt","w") as f:
             break
 
         x+=1
-    print "Average error (pixels)" , np.average(errors)
+    print "RMSE (in pixels)" , np.sqrt(np.average(errors))
     print "Missdetected frames", miss_detections
         # Cool
         # im1,im2,im3,im4 =

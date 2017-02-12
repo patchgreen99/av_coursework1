@@ -18,6 +18,7 @@ class roomimage:
 
         
     def changestate(self,office_activity,cab_activity,door_activity,total_activity):
+        prev_state = self.curstate
         room_activity = total_activity*area(self.total) - office_activity*area(self.office) - cab_activity*area(self.cabinet) - door_activity*area(self.door)
         no_activity = 0
         if total_activity == 0:
@@ -29,8 +30,10 @@ class roomimage:
                         "outside_the_room":[0,0,0,door_activity,no_activity,0],
                         "start"           :[office_activity,cab_activity,room_activity,door_activity,no_activity,0]}
         decision = np.array(transitions[self.states[self.curstate]])
-        # THIS SOMETIMES fails and defaults to 0 so when we are outside we just straight to the desk
+        # THIS SOMETIMES fails and defaults to 0 so when we are outside we just straight to the desl
         self.curstate = np.argmax(decision/np.sum(decision))
+        if prev_state == 4 and self.curstate == 0:
+            self.curstate = 4
         return self.tag[self.curstate]
 
         
