@@ -1,5 +1,6 @@
 from tools import *
 import cv2
+from pykalman import KalmanFilter
 from math import ceil
 
 class roomimage:
@@ -10,7 +11,7 @@ class roomimage:
         self.cabinet = ((850, 180), (1200, 700))
         self.door = ((0, 120), (300, 720))
         self.total = ((0, 0), (1280, 720))
-        self.old_c = []
+        self.measurements = []
         self.states = ["working_at_desk","at_cabinets","just_in_the_room","at_the_door","outside_the_room","start"]
         self.statemarkings = [self.office[0],self.cabinet[0],self.total[0],self.door[0]]
         self.tag = ["desk","cabinet","room","room","outside"]
@@ -19,7 +20,9 @@ class roomimage:
         
     def changestate(self,office_activity,cab_activity,door_activity,total_activity):
         prev_state = self.curstate
-        room_activity = total_activity*area(self.total) - office_activity*area(self.office) - cab_activity*area(self.cabinet) - door_activity*area(self.door)
+        room_activity = (total_activity * area(self.total) - office_activity * area(self.office) - cab_activity * area(
+            self.cabinet) - door_activity * area(self.door)) \
+                        / (area(self.total) * area(self.office) * area(self.cabinet) * area(self.door))
         no_activity = 0
         if total_activity == 0:
             no_activity =1
@@ -37,14 +40,51 @@ class roomimage:
         return self.tag[self.curstate]
 
         
-    def draw(self,swc1,swc2,center_of_mass,office_activity,cab_activity,door_activity):
-        if center_of_mass:
-            if swc2 and center_of_mass and swc2 > 0.05:
+    def draw(self,swc1,swc2,center_of_mass,dT,office_activity,cab_activity,door_activity):
+        if center_of_mass is not None:
+            self.measurements.append(center_of_mass)
+
+
+            # Kalman filter
+
+            curstate = np.array([self.measurements[-2,0], self.measurements[-2,1], (self.measurements[-1,0] - self.measurements[-2,0]) / dT,
+                                 (self.measurements[-1,1] - self.measurements[-2,1]) / dT])
+
+            if previnitstate is not None:
+                transition_matrices = np.array([[1, 0, dT, 0], [0, 1, 0, dT], [0, 0, 1, 0], [0, 0, 0, 1]])
+                observation_matrices = [[1, 0, 0, 0], [0, 1, 0, 0]]
+
+                initcovariance = 1.0e-3 * np.eye(4)
+                transistionCov = 1.0e-4 * np.eye(4)
+                observationCov = 1.0e-1 * np.eye(2)
+                kf = KalmanFilter(transition_matrices=transition_matrices,
+                                  observation_matrices=observation_matrices,
+                                  initial_state_mean=previnitstate,
+                                  initial_state_covariance=initcovariance,
+                                  transition_covariance=transistionCov,
+                                  observation_covariance=observationCov)
+
+                print previnitstate
+                print curstate
+                (filtered_state_means, filtered_state_covariances) = kf.filter([previnitstate, curstate])
+
+                previnitstate = curstate
+
+
+
+            if swc2 and center_of_mass is not None and swc2 > 0.05:
                 cv2.circle(self.image, tuple(center_of_mass), 50, (0, 255, 25), thickness=-1)
-            elif swc2 and center_of_mass and swc2 > 0.01 and swc1 > 0.005:
+            elif swc2 and center_of_mass is not None and swc2 > 0.01 and swc1 > 0.005:
                 cv2.circle(self.image, tuple(center_of_mass), 50, (0, 25, 255), thickness=-1)
             else:
                 cv2.circle(self.image, tuple(center_of_mass), 50, (182, 24, 255), thickness=-1)
+
+            for idx in range(len(self.measurements)-1):
+                cv2.line(self.image, tuple(self.measurements[idx]), tuple(self.measurements[idx+1]), (0, 25, 255),
+                         thickness=1)
+
+            if len(self.measurements) > 6:
+                del self.measurements[0]
 
 
 
@@ -54,6 +94,7 @@ class roomimage:
 
         if self.curstate < 4:
             cv2.circle(self.image, self.statemarkings[self.curstate], 30, (25,255,255), thickness=-1)
+
 
 
 class binroomimage:

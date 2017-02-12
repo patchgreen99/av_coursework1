@@ -2,6 +2,7 @@ import numpy as np
 import os
 import cv2
 import glob
+from datetime import *
 
 def fix_win(w, limits=(1280, 720)):
     w1 = max([w[0][0], 0])
@@ -76,8 +77,12 @@ def getimages(args):
 
     for x in range(len(orig) - 1):
 
-        # skip first x frames using -fs
         if x < args.f: continue
+
+        dt = datetime.strptime(orig[x + 1][32:], '%H_%M_%S.jpg') - datetime.strptime(orig[x][32:], '%H_%M_%S.jpg')
+        deltaT = dt.seconds
+
+        # skip first x frames using -fs
         print "Image:", x, "of ", len(orig), orig[x + 1][32:]
         label = labels.get(os.path.basename(orig[x + 1]))
         # Pause on labeled images
@@ -101,31 +106,11 @@ def getimages(args):
             im2 = cv2.imread(images[x + 1])
 
 
-        yield waittime, im3, im4 , label
+        yield waittime, im3, im4 , label, deltaT
 
 
 
 
-
-############################################################
-# Kalman filter and condensation tracking implementation
-
-############################################################
-
-
-class condensation():
-    def __init__(self):
-        self.samples = np.array([])
-        self.numsamples = 10
-
-    def generate_samples(self, x, p, time):
-        """
-        :param x: state vector
-        :param p: probability
-        :return:
-        """
-        oldselections = self.samples[np.random.randint(0,self.numsamples,self.numsamples)]
-        xc = x[oldselections,time-1,:]
 
 
 

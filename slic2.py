@@ -9,8 +9,6 @@ from scipy import ndimage
 from math import ceil
 from tools import *
 from room import roomimage, binroomimage
-
-# from pykalman import KalmanFilter
 # from tochroma import *
 
 cv2.namedWindow("Frame", 0)
@@ -29,12 +27,16 @@ room = roomimage()
 binaryroom = binroomimage()
 prev_com = None
 center_of_mass = None
+kfmeasurements = None
+previnitstate = None
+filtered_state_means = None
+curstate = None
 miss_detections = []
 state = "start"
 with file("transpoints.txt","w") as f:
     x=args.f
-    for waittime,im3,im4,im_label in getimages(args):
-        prev_com = center_of_mass
+
+    for waittime,im3,im4,im_label,dT in getimages(args):
         room.image = im3
 
         # remove noise
@@ -64,7 +66,7 @@ with file("transpoints.txt","w") as f:
         swc1, swc2,center_of_mass = None, None, None
         # pass 1
         if total_activity > 0.05:
-            try:
+            #try:
                 CoM = ndimage.measurements.center_of_mass(binaryroom.image)
                 center_of_mass = [int(CoM[1]), int(CoM[0])]
                 swc, win = avg_win_center(center_of_mass, 250, binaryroom.image)
@@ -79,13 +81,11 @@ with file("transpoints.txt","w") as f:
                 center_of_mass = [win1[0][0] + int(CoM2[0]), win1[0][1] + int(CoM2[1])]
                 swc2, win2 = avg_win_center(center_of_mass, 50, binaryroom.image)
 
-                #print "act:", swc, swc1
-
-            except:
+           # except:
                 #print "Error or Empty", CoM, CoM1, CoM2
                 waittime = 0
 
-            binaryroom.draw(win, win1, win2)
+                binaryroom.draw(win, win1, win2)
 
         else:
             center_of_mass = None
@@ -109,27 +109,27 @@ with file("transpoints.txt","w") as f:
             if state in ["desk","cabinet","room"]:
                 center_of_mass = tuple(prev_com)
 
-        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+        room.draw(swc1, swc2, center_of_mass, dT, office_activity, cab_activity, door_activity)
 
-        if waittime == 0 and (im_label[0]) :
-            print "ACTIVITY"
-            print "DOOR", "        OFFICE", "          Cabinet" , "COM"
-            print door_activity, office_activity, cab_activity, center_of_mass
-            if center_of_mass and swc2:
-                print "Total      ", " Large  ", "    Medium", "       Small"
-                print total_activity, swc, swc1, swc2, center_of_mass
-            if im_label[0] and center_of_mass:
-                error_dist = eucl_dist(center_of_mass,im_label[0])
-                errors.append(error_dist*error_dist)
-            if  not center_of_mass and not im_label[0]:
-                errors.append(0)
-            waittime = 10
-            if center_of_mass and not im_label[0]:
-                miss_detections.append(x)
-                waittime = 0
-
-        else:
-            waittime = 10
+        # if waittime == 0 and (im_label[0]) :
+        #     print "ACTIVITY"
+        #     print "DOOR", "        OFFICE", "          Cabinet" , "COM"
+        #     print door_activity, office_activity, cab_activity, center_of_mass
+        #     if center_of_mass and swc2:
+        #         print "Total      ", " Large  ", "    Medium", "       Small"
+        #         print total_activity, swc, swc1, swc2, center_of_mass
+        #     if im_label[0] and center_of_mass:
+        #         error_dist = eucl_dist(center_of_mass,im_label[0])
+        #         errors.append(error_dist*error_dist)
+        #     if  not center_of_mass and not im_label[0]:
+        #         errors.append(0)
+        #     waittime = 10
+        #     if center_of_mass and not im_label[0]:
+        #         miss_detections.append(x)
+        #         waittime = 0
+        #
+        # else:
+        #     waittime = 10
 
 
 
