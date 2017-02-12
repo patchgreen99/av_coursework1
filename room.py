@@ -6,7 +6,7 @@ class roomimage:
     def __init__(self):
         self.image = None
         # important locations
-        self.office = ((360, 120), (650, 580))
+        self.office = ((360, 120), (700, 620))
         self.cabinet = ((850, 180), (1200, 700))
         self.door = ((0, 120), (300, 720))
         self.total = ((0, 0), (1280, 720))
@@ -32,7 +32,7 @@ class roomimage:
         decision = np.array(transitions[self.states[self.curstate]])
         # THIS SOMETIMES fails and defaults to 0 so when we are outside we just straight to the desl
         self.curstate = np.argmax(decision/np.sum(decision))
-        if prev_state == 4 and self.curstate == 0:
+        if prev_state == 4 and (self.curstate in [0,1]):
             self.curstate = 4
         return self.tag[self.curstate]
 

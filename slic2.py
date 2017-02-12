@@ -108,7 +108,7 @@ with file("transpoints.txt","w") as f:
 
         room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
-        if waittime == 0 :
+        if waittime == 0 and (im_label[0]) :
             print "ACTIVITY"
             print "DOOR", "        OFFICE", "          Cabinet" , "COM"
             print door_activity, office_activity, cab_activity, center_of_mass
@@ -125,7 +125,8 @@ with file("transpoints.txt","w") as f:
                 miss_detections.append(x)
                 waittime = 0
 
-
+        else:
+            waittime = 10
 
 
 
