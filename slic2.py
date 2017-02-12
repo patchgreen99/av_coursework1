@@ -91,9 +91,13 @@ with file("transpoints.txt","w") as f:
             center_of_mass = None
             print "No activity detected"
 
+        center_of_mass = room.filter(center_of_mass,dT)
+
+        # TODO This seems really hacky and with limited point
+
         # USE the state machine to decide whether the position is valid
         if state and state == "outside" and total_activity > 1:
-            state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
+            state = room.changestate(office_activity, cab_activity, door_activity, total_activity,center_of_mass)
             center_of_mass = None
         elif state == "start" and total_activity < 0.08:
             # if we initialize on a frame with no activity, avoid getting locked outside
@@ -103,13 +107,16 @@ with file("transpoints.txt","w") as f:
             center_of_mass = None
             # state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
         else :
-            state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
+            state = room.changestate(office_activity, cab_activity, door_activity, total_activity,center_of_mass)
         print state
-        if not center_of_mass and prev_com != None:
+
+        if center_of_mass is None and prev_com is not None:
             if state in ["desk","cabinet","room"]:
                 center_of_mass = tuple(prev_com)
 
-        room.draw(swc1, swc2, center_of_mass, dT, office_activity, cab_activity, door_activity)
+        prev_com = center_of_mass
+
+        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
         # if waittime == 0 and (im_label[0]) :
         #     print "ACTIVITY"
@@ -143,7 +150,8 @@ with file("transpoints.txt","w") as f:
 
         except:
             pass
-        key = cv2.waitKey(waittime) & 0xFF
+        # todo change bk to waitkey
+        key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
             print "RMSE (in pixels)" , np.sqrt(np.average(errors))
