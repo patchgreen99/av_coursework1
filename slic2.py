@@ -30,7 +30,7 @@ binaryroom = binroomimage()
 prev_com = None
 center_of_mass = None
 miss_detections = []
-state = None
+state = "start"
 with file("transpoints.txt","w") as f:
     x=args.f
     for waittime,im3,im4,im_label in getimages(args):
@@ -95,6 +95,9 @@ with file("transpoints.txt","w") as f:
         if state and state == "outside" and total_activity > 1:
             state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
             center_of_mass = None
+        elif state == "start" and total_activity < 0.08:
+            # if we initialize on a frame with no activity, avoid getting locked outside
+            pass
         elif state == "outside":
             pass
             center_of_mass = None
@@ -143,9 +146,11 @@ with file("transpoints.txt","w") as f:
         key = cv2.waitKey(waittime) & 0xFF
         if key == ord("q"):
             break
+            print "RMSE (in pixels)" , np.sqrt(np.average(errors))
+            print "Missdetected frames", miss_detections
 
         x+=1
-    print "RMSE (in pixels)" , np.sqrt(np.average(errors))
+    print "RMSE (in pixels)" , np.sqrt(np.average(errors)), "in ", len(errors), " labeled images"
     print "Missdetected frames", miss_detections
         # Cool
         # im1,im2,im3,im4 =
