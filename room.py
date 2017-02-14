@@ -6,7 +6,7 @@ class roomimage:
     def __init__(self):
         self.image = None
         # important locations
-        self.office = ((360, 120), (700, 620))
+        self.office = ((350, 110), (730, 660))
         self.cabinet = ((850, 180), (1200, 700))
         self.door = ((0, 120), (300, 720))
         self.total = ((0, 0), (1280, 720))

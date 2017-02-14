@@ -21,7 +21,7 @@ def clip(img, w):
 
 
 def is_in(p, area):
-    return p[0] > area[0][0] and p < area[1][0] and p[1] > area[0][1] and p < area[1][1]
+    return p[0] > area[0][0] and p[0] < area[1][0] and p[1] > area[0][1] and p[1] < area[1][1]
 
 
 def sum_win_center(c, width, img):

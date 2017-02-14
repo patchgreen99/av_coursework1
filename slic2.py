@@ -31,6 +31,8 @@ prev_com = None
 center_of_mass = None
 miss_detections = []
 state = "start"
+
+out_c, desk_c, cabinet_c, not_desk_c = 0,0,0,0
 with file("transpoints.txt","w") as f:
     x=args.f
     for waittime,im3,im4,im_label in getimages(args):
@@ -131,27 +133,46 @@ with file("transpoints.txt","w") as f:
         else:
             waittime = 10
 
+        
+
+        if not center_of_mass:
+            out_c = out_c + 1
+            not_desk_c = not_desk_c+ 1
+        elif is_in(center_of_mass, room.office):
+            desk_c = desk_c+ 1
+        elif is_in(center_of_mass, room.cabinet):
+            cabinet_c +=1
+            not_desk_c +=1
+        else:
+            not_desk_c += 1
+
+
+        # TODO::: COUNT TRANSITION FROM AND TO OUTSIDE
+
+
 
 
 
         # SHOW
         # Fast
         # im3 = clip(im3,office)
-        try:
-            cv2.imshow("Frame", room.image)
-            cv2.imshow("Final", binaryroom.image)
+        # try:
+        #     cv2.imshow("Frame", room.image)
+        #     cv2.imshow("Final", binaryroom.image)
 
-        except:
-            pass
-        key = cv2.waitKey(waittime) & 0xFF
-        if key == ord("q"):
-            break
-            print "RMSE (in pixels)" , np.sqrt(np.average(errors))
-            print "Missdetected frames", miss_detections
+        # except:
+        #     pass
+        # key = cv2.waitKey(waittime) & 0xFF
+        # if key == ord("q"):
+        #     break
+        #     print "RMSE (in pixels)" , np.sqrt(np.average(errors))
+        #     print "Missdetected frames", miss_detections
+        #     print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
 
         x+=1
     print "RMSE (in pixels)" , np.sqrt(np.average(errors)), "in ", len(errors), " labeled images"
     print "Missdetected frames", miss_detections
+    print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
         # Cool
         # im1,im2,im3,im4 =
         # try:
