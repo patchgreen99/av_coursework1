@@ -1,0 +1,16 @@
+RMSE (in pixels) 64.8537743558 in  83  labeled images
+Missdetected frames []
+
+Completed  in 3m50s displ. images
+
+
+
+RMSE (in pixels) 64.8537743558 in  83  labeled images
+Missdetected frames []
+COUTNS 
+outside :1309
+office : 5324
+cabinet: 36 
+none_at_desk: 1394
+
+completed in 2m10secs without showing images.
