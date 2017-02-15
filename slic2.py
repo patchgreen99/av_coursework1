@@ -12,7 +12,7 @@ from room import roomimage, binroomimage
 # from tochroma import *
 
 cv2.namedWindow("Frame", 0)
-cv2.namedWindow("Final", 0)
+#cv2.namedWindow("Final", 0)
 
 parser = argparse.ArgumentParser(description='Basic Single Person Motion Tracker')
 parser.add_argument('-c', action="store", dest="c", type=int, help="Convert To Chroma")
@@ -37,7 +37,7 @@ with file("transpoints.txt","w") as f:
     x=args.f
 
     for waittime,im3,im4,im_label,dT in getimages(args):
-        room.image = im3
+        room.image.append(im3)
 
         # remove noise
 
@@ -91,8 +91,6 @@ with file("transpoints.txt","w") as f:
             center_of_mass = None
             print "No activity detected"
 
-        center_of_mass = room.filter(center_of_mass,dT)
-
         # TODO This seems really hacky and with limited point
 
         # USE the state machine to decide whether the position is valid
@@ -116,7 +114,8 @@ with file("transpoints.txt","w") as f:
 
         prev_com = center_of_mass
 
-        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+        room.filter(center_of_mass, dT)
+        room.draw(swc1, swc2, office_activity, cab_activity, door_activity)
 
         # if waittime == 0 and (im_label[0]) :
         #     print "ACTIVITY"
@@ -145,8 +144,8 @@ with file("transpoints.txt","w") as f:
         # Fast
         # im3 = clip(im3,office)
         try:
-            cv2.imshow("Frame", room.image)
-            cv2.imshow("Final", binaryroom.image)
+            cv2.imshow("Frame", room.image[0])
+            #cv2.imshow("Final", binaryroom.image)
 
         except:
             pass
