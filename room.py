@@ -2,8 +2,9 @@ from tools import *
 import cv2
 from pykalman import KalmanFilter
 from math import ceil
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, fftconvolve
 import numpy.ma as ma
+from Savitzky import sgolay2d
 
 class roomimage:
     def __init__(self):
@@ -45,7 +46,7 @@ class roomimage:
                 decision[boxes] *= np.all(np.absolute((loc[1]+loc[0])/2.0-center_of_mass)*2.0 < np.absolute(loc[0]-loc[1]))
 
 
-        print decision
+        # print decision
         # THIS SOMETIMES fails and defaults to 0 so when we are outside we just straight to the desl
         self.curstate = np.argmax(decision/np.sum(decision))
         if prev_state == 4 and (self.curstate in [0,1]):
@@ -70,28 +71,28 @@ class roomimage:
 
 
           ## Kalman filter
-          #if len(self.measurements) > self.samples:
-          #    del self.image[0]
-          #    self.measurements = np.delete(self.measurements,0,0)
-          #
-          #    initstate = [self.measurements[0,0], self.measurements[0,1], (self.measurements[1,0] - self.measurements[0,0]) / dT,
-          #                         (self.measurements[1,1] - self.measurements[0,1]) / dT]
-          #    transition_matrices = np.array([[1, 0, dT, 0], [0, 1, 0, dT], [0, 0, 1, 0], [0, 0, 0, 1]])
-          #    observation_matrices = [[0, 0, 0, 0], [0, 0, 0, 0]]
-          #
-          #    x = np.vstack([self.measurements[:-1,0], self.measurements[:-1,1], (self.measurements[1:,0] - self.measurements[:-1,0]) / dT, (self.measurements[1:,1] - self.measurements[:-1,1]) / dT])
-          #    initcovariance = np.cov(x)
-          #    transistionCov = np.cov(x)
-          #    observationCov = 0 * np.eye(2)
-          #    kf = KalmanFilter(transition_matrices=transition_matrices,
-          #                      observation_matrices=observation_matrices,
-          #                      initial_state_mean=initstate,
-          #                      initial_state_covariance=initcovariance,
-          #                      transition_covariance=transistionCov,
-          #                      observation_covariance=observationCov)
-          #
-          #    (filtered_state_means, filtered_state_covariances) = kf.filter(self.measurements)
-          #    self.measurements = filtered_state_means[:,:2].astype("int16")
+            # if len(self.measurements) > self.samples:
+            #      del self.image[0]
+            #      self.measurements = np.delete(self.measurements,0,0)
+            #
+            #      initstate = [self.measurements[0,0], self.measurements[0,1], (self.measurements[1,0] - self.measurements[0,0]) / dT,
+            #                           (self.measurements[1,1] - self.measurements[0,1]) / dT]
+            #      transition_matrices = np.array([[1, 0, dT, 0], [0, 1, 0, dT], [0, 0, 1, 0], [0, 0, 0, 1]])
+            #      observation_matrices = [[0, 0, 0, 0], [0, 0, 0, 0]]
+            #
+            #      x = np.vstack([self.measurements[:-1,0], self.measurements[:-1,1], (self.measurements[1:,0] - self.measurements[:-1,0]) / dT, (self.measurements[1:,1] - self.measurements[:-1,1]) / dT])
+            #      initcovariance = np.cov(x)
+            #      transistionCov = np.cov(x)
+            #      observationCov = 0 * np.eye(2)
+            #      kf = KalmanFilter(transition_matrices=transition_matrices,
+            #                        observation_matrices=observation_matrices,
+            #                        initial_state_mean=initstate,
+            #                        initial_state_covariance=initcovariance,
+            #                        transition_covariance=transistionCov,
+            #                        observation_covariance=observationCov)
+            #
+            #      (filtered_state_means, filtered_state_covariances) = kf.filter(self.measurements)
+            #      return np.asarray(np.rint(filtered_state_means[-1,:2]),dtype=np.dtype("int16"))
 
                 # reinsert the measurement
                 # self.measurements = np.delete(self.measurements,-1,0)
@@ -100,8 +101,15 @@ class roomimage:
         if len(self.measurements) > self.samples:
             self.measurements = np.delete(self.measurements,0,0)
             del self.image[0]
-            print len(self.measurements)
-            self.measurements = savgol_filter(self.measurements, self.samples, 5)
+            before = self.measurements
+
+            x = np.asarray(np.rint(savgol_filter(self.measurements[:,0], self.samples, 5)),dtype=np.dtype("int16"))[0]
+            #x = self.measurements[:,0]
+            y = np.asarray(np.rint(savgol_filter(self.measurements[:,1], self.samples, 5)),dtype=np.dtype("int16"))[0]
+            #y = self.measurements[:,1]
+            self.measurements = np.delete(self.measurements, 0, 0)
+            self.measurements = np.insert(self.measurements,1,[x,y],axis = 0)
+            print np.abs(before - self.measurements)
             # reinsert the measurement
             # self.measurements = np.delete(self.measurements,-1,0)
             # self.measurements = np.insert(self.measurements, 1, [center_of_mass[0], center_of_mass[1]], axis=0)
@@ -109,28 +117,27 @@ class roomimage:
 
 
     def draw(self, swc1, swc2, office_activity, cab_activity, door_activity):
-        if len(self.measurements) > self.samples:
-            print "ITS DRAWING"
-
+        image = self.image[0]
+        if len(self.measurements) > 0:
             center_of_mass = self.measurements[0]
             if swc2 and center_of_mass is not None and swc2 > 0.05:
-                cv2.circle(self.image[0], tuple(center_of_mass), 50, (0, 255, 25), thickness=-1)
+                cv2.circle(image, tuple(center_of_mass), 50, (0, 255, 25), thickness=-1)
             elif swc2 and center_of_mass is not None and swc2 > 0.01 and swc1 > 0.005:
-                cv2.circle(self.image[0], tuple(center_of_mass), 50, (0, 25, 255), thickness=-1)
+                cv2.circle(image, tuple(center_of_mass), 50, (0, 25, 255), thickness=-1)
             else:
-                cv2.circle(self.image[0], tuple(center_of_mass), 50, (182, 24, 255), thickness=-1)
+                cv2.circle(image, tuple(center_of_mass), 50, (182, 24, 255), thickness=-1)
 
-           # for idx in range(len(self.measurements) - 1):
-           #     cv2.line(self.image, tuple(self.measurements[idx, :2]), tuple(self.measurements[idx + 1, :2]),
-            #             (0, 25, 255),
-            #             thickness=1)
+       # for idx in range(len(self.measurements) - 1):
+       #     cv2.line(self.image, tuple(self.measurements[idx, :2]), tuple(self.measurements[idx + 1, :2]),
+        #             (0, 25, 255),
+        #             thickness=1)
 
-            cv2.rectangle(self.image[0], self.office[0], self.office[1], (255, 0, 0), thickness=min([int((10 * office_activity)), 30]))
-            cv2.rectangle(self.image[0], self.cabinet[0], self.cabinet[1], (255, 255, 0), thickness=min([int(ceil(cab_activity)), 30]))
-            cv2.rectangle(self.image[0], self.door[0], self.door[1], (0, 255, 255), thickness=min([int(ceil(door_activity)), 30]))
+        cv2.rectangle(image, self.office[0], self.office[1], (255, 0, 0), thickness=min([int((10 * office_activity)), 30]))
+        cv2.rectangle(image, self.cabinet[0], self.cabinet[1], (255, 255, 0), thickness=min([int(ceil(cab_activity)), 30]))
+        cv2.rectangle(image, self.door[0], self.door[1], (0, 255, 255), thickness=min([int(ceil(door_activity)), 30]))
 
-            if self.curstate < 4:
-                cv2.circle(self.image[0], self.statemarkings[self.curstate][0], 30, (25,255,255), thickness=-1)
+        if self.curstate < 4:
+            cv2.circle(image, self.statemarkings[self.curstate][0], 30, (25,255,255), thickness=-1)
 
 
 
