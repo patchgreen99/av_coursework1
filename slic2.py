@@ -33,6 +33,7 @@ miss_detections = []
 state = "start"
 
 out_c, desk_c, cabinet_c, not_desk_c = 0,0,0,0
+in_to_out, out_to_in = 0,0
 with file("transpoints.txt","w") as f:
     x=args.f
     for waittime,im3,im4,im_label in getimages(args):
@@ -94,6 +95,7 @@ with file("transpoints.txt","w") as f:
             print "No activity detected"
 
         # USE the state machine to decide whether the position is valid
+        old_state = state
         if state and state == "outside" and total_activity > 1:
             state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
             center_of_mass = None
@@ -112,6 +114,8 @@ with file("transpoints.txt","w") as f:
                 center_of_mass = tuple(prev_com)
 
         room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+
+        
 
         if waittime == 0 and (im_label[0]) :
             print "ACTIVITY"
@@ -134,6 +138,10 @@ with file("transpoints.txt","w") as f:
             waittime = 10
 
         
+        if old_state == "outside" and state != "outside":
+            out_to_in += 1
+        if old_state != "outside" and state == "outside":
+            in_to_out += 1
 
         if not center_of_mass:
             out_c = out_c + 1
@@ -156,23 +164,26 @@ with file("transpoints.txt","w") as f:
         # SHOW
         # Fast
         # im3 = clip(im3,office)
-        # try:
-        #     cv2.imshow("Frame", room.image)
-        #     cv2.imshow("Final", binaryroom.image)
+        try:
+            cv2.imshow("Frame", room.image)
+            cv2.imshow("Final", binaryroom.image)
+            if x%100 in [3,4,5] and False:
+                cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
+                cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
 
-        # except:
-        #     pass
-        # key = cv2.waitKey(waittime) & 0xFF
-        # if key == ord("q"):
-        #     break
-        #     print "RMSE (in pixels)" , np.sqrt(np.average(errors))
-        #     print "Missdetected frames", miss_detections
-        #     print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
+        except:
+            pass
+        key = cv2.waitKey(waittime) & 0xFF
+        if key == ord("q"):
+            break
+            print "RMSE (in pixels)" , np.sqrt(np.average(errors))
+            print "Missdetected frames", miss_detections
+            print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c, in_to_out,out_to_in
 
         x+=1
     print "RMSE (in pixels)" , np.sqrt(np.average(errors)), "in ", len(errors), " labeled images"
     print "Missdetected frames", miss_detections
-    print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
+    print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c,in_to_out,out_to_in
         # Cool
         # im1,im2,im3,im4 =
         # try:
