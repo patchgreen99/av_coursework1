@@ -54,7 +54,6 @@ class roomimage:
                 self.measurements = np.delete(self.measurements, 0, 0)
                 x = np.asarray(np.rint(savgol_filter(self.measurements[:, 0], 27, 3)), dtype=np.dtype("int"))[0]
                 y = np.asarray(np.rint(savgol_filter(self.measurements[:, 1], 27, 3)), dtype=np.dtype("int"))[0]
-                self.measurements = np.delete(self.measurements, 0, 0)
                 self.positions = np.delete(self.positions, -1, 0)
                 center_of_mass = (x, y)
                 self.positions = np.insert(self.measurements, 1, center_of_mass, axis=0)
