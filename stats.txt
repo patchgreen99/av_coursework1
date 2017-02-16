@@ -14,3 +14,9 @@ cabinet: 36
 none_at_desk: 1394
 
 completed in 2m10secs without showing images.
+
+
+RMSE (in pixels) 80.3169456884 in  85  labeled images
+Missdetected frames []
+COUTNS 1309 5324 36 1394 
+2 2
