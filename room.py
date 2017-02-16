@@ -12,6 +12,7 @@ class roomimage:
         self.door = ((0, 120), (300, 720))
         self.total = ((0, 0), (1280, 720))
         self.measurements = []
+        self.positions = []
         self.states = ["working_at_desk","at_cabinets","just_in_the_room","at_the_door","outside_the_room","start"]
         self.statemarkings = [self.office[0],self.cabinet[0],self.total[0],self.door[0]]
         self.tag = ["desk","cabinet","room","room","outside"]
@@ -43,20 +44,24 @@ class roomimage:
         if center_of_mass:
             if self.start:
                 self.measurements = np.array([[center_of_mass[0], center_of_mass[1]]])
+                self.positions = np.array([[center_of_mass[0], center_of_mass[1]]])
                 self.start = False
             else:
                 self.measurements = np.insert(self.measurements, 1, [center_of_mass[0], center_of_mass[1]], axis=0)
+                self.positions = np.insert(self.measurements, 1, [center_of_mass[0], center_of_mass[1]], axis=0)
 
             if len(self.measurements) > 27:
                 self.measurements = np.delete(self.measurements, 0, 0)
                 x = np.asarray(np.rint(savgol_filter(self.measurements[:, 0], 27, 3)), dtype=np.dtype("int"))[0]
                 y = np.asarray(np.rint(savgol_filter(self.measurements[:, 1], 27, 3)), dtype=np.dtype("int"))[0]
-                center_of_mass = (x,y)
-
+                self.measurements = np.delete(self.measurements, 0, 0)
+                self.positions = np.delete(self.positions, -1, 0)
+                center_of_mass = (x, y)
+                self.positions = np.insert(self.measurements, 1, center_of_mass, axis=0)
 
 
             if swc2 and center_of_mass and swc2 > 0.05:
-                cv2.circle(self.image, tuple(center_of_mass), 50, (0, 255, 25), thickness=-1)
+                cv2.circle(self.image, tuple(center_of_mass), 50, (0, 255, 255), thickness=-1)
             elif swc2 and center_of_mass and swc2 > 0.01 and swc1 > 0.005:
                 cv2.circle(self.image, tuple(center_of_mass), 50, (0, 25, 255), thickness=-1)
             else:
@@ -70,6 +75,10 @@ class roomimage:
 
         if self.curstate < 4:
             cv2.circle(self.image, self.statemarkings[self.curstate], 30, (25,255,255), thickness=-1)
+
+
+
+
 
 
 class binroomimage:

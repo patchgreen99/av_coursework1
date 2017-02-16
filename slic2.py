@@ -167,13 +167,13 @@ with file("transpoints.txt","w") as f:
         try:
             cv2.imshow("Frame", room.image)
             cv2.imshow("Final", binaryroom.image)
-            if x%100 in [3,4,5] and False:
-                cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
-                cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
+            # if x%100 in [3,4,5] and False:
+            #     cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
+            #     cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
 
         except:
             pass
-        key = cv2.waitKey(waittime) & 0xFF
+        key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
             print "RMSE (in pixels)" , np.sqrt(np.average(errors))
@@ -181,6 +181,8 @@ with file("transpoints.txt","w") as f:
             print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c, in_to_out,out_to_in
 
         x+=1
+
+
     print "RMSE (in pixels)" , np.sqrt(np.average(errors)), "in ", len(errors), " labeled images"
     print "Missdetected frames", miss_detections
     print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c,in_to_out,out_to_in
@@ -195,3 +197,11 @@ with file("transpoints.txt","w") as f:
         # 	cv2.waitKey(waittime)
         # except:
         # 	pass
+
+
+for waittime,im3,im4,im_label in getimages(args):
+    for idx in range(len(room.positions)-1):
+        cv2.line(im3, tuple(room.positions[idx]), tuple(room.positions[idx+1]), (0,0,255), 1)
+
+    cv2.imwrite("movement.jpg", im3)
+    break
