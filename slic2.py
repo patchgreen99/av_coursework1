@@ -35,6 +35,7 @@ miss_detections = []
 state = "start"
 positions = []
 
+# Zero the Statistics Coutners
 out_c, desk_c, cabinet_c, not_desk_c = 0,0,0,0
 in_to_out, out_to_in = 0,0
 intoout,outtoin = [], []
@@ -44,10 +45,12 @@ with file("transpoints.txt","w") as f:
         prev_com = center_of_mass
         room.image = im3
 
-        # remove noise
-
+        
+        # Find difference
         th4 = cv2.absdiff(im3, im4)
+        # convert to grayscale
         th4 = cv2.cvtColor(th4, cv2.COLOR_BGR2GRAY)
+        # remove noise
         ret, thresh1 = cv2.threshold(th4, 80, 255, cv2.THRESH_BINARY)
 
         # cleanup
@@ -58,20 +61,22 @@ with file("transpoints.txt","w") as f:
 
         binaryroom.image = thresh1
 
+        # Calculate activity for each spot
         office_activity = avg_win(room.office, binaryroom.image)
         cab_activity = avg_win(room.cabinet, binaryroom.image)
         door_activity = avg_win(room.door, binaryroom.image)
         total_activity = avg_win(room.total, binaryroom.image)
 
 
-        #print total_activity
         CoM = None
         CoM1 = None
         CoM2 = None
         swc1, swc2,center_of_mass = None, None, None
-        # pass 1
+        
+        # Consider only above some activity level
         if total_activity > 0.05:
-            try:
+            try: # Successive detection of center of mass
+                # pass 1
                 CoM = ndimage.measurements.center_of_mass(binaryroom.image)
                 center_of_mass = [int(CoM[1]), int(CoM[0])]
                 swc, win = avg_win_center(center_of_mass, 250, binaryroom.image)
@@ -109,7 +114,6 @@ with file("transpoints.txt","w") as f:
         elif state == "outside":
             pass
             center_of_mass = None
-            # state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
         else :
             state = room.changestate(office_activity, cab_activity, door_activity, total_activity)
         print state
@@ -120,7 +124,7 @@ with file("transpoints.txt","w") as f:
         if not args.fast: room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
         
-
+        # Calculation of statistics
         if waittime == 0 and (im_label[0]) :
             print "ACTIVITY"
             print "DOOR", "        OFFICE", "          Cabinet" , "COM"
@@ -167,8 +171,7 @@ with file("transpoints.txt","w") as f:
 
 
 
-        # SHOW
-        # Fast
+        # SHOW - skip if need fast
         # im3 = clip(im3,office)
         if not args.fast:
             try:
@@ -195,17 +198,7 @@ with file("transpoints.txt","w") as f:
     print "Missdetected frames", miss_detections
     print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
     print "INS AN OUTS" ,in_to_out, intoout, out_to_in, outtoin
-        # Cool
-        # im1,im2,im3,im4 =
-        # try:
-        # 	bin_frames = np.concatenate([im1,im2],axis=1)
-        # 	bin_frames = np.dstack([bin_frames,bin_frames,bin_frames])
-        # 	col_frames = np.concatenate([im3,im4],axis=1)
-        # 	all_frames = np.concatenate([col_frames,bin_frames],axis=0)
-        # 	cv2.imshow("Frame",all_frames)
-        # 	cv2.waitKey(waittime)
-        # except:
-        # 	pass
+
 
 
 for waittime,im3,im4,im_label,f_name in getimages(args):
