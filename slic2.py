@@ -31,6 +31,7 @@ prev_com = None
 center_of_mass = None
 miss_detections = []
 state = "start"
+positions = []
 
 out_c, desk_c, cabinet_c, not_desk_c = 0,0,0,0
 in_to_out, out_to_in = 0,0
@@ -157,7 +158,7 @@ with file("transpoints.txt","w") as f:
 
         # TODO::: COUNT TRANSITION FROM AND TO OUTSIDE
 
-
+        positions.append(center_of_mass)
 
 
 
@@ -200,8 +201,13 @@ with file("transpoints.txt","w") as f:
 
 
 for waittime,im3,im4,im_label in getimages(args):
-    for idx in range(len(room.positions)-1):
-        cv2.line(im3, tuple(room.positions[idx]), tuple(room.positions[idx+1]), (0,0,255), 1)
-
+    frst = None
+    second = None
+    while len(positions) > 0:
+        second = positions[0]
+        del positions[0]
+        if frst and second:
+            cv2.line(im3, tuple(frst), tuple(second), (0,0,255), 1)
+        if second: frst = second
     cv2.imwrite("movement.jpg", im3)
     break
