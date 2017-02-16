@@ -21,6 +21,8 @@ parser.add_argument('-c', action="store", dest="c", type=int, help="Convert To C
 parser.add_argument('-f', action="store", dest="f", type=int, help="Frame to Start", default = 0)
 parser.add_argument('-w', action="store", dest="w", type=int, default=1, help="Time Per frame")
 parser.add_argument('-p', action="store", dest="folder", type=str, help="Path to images")
+parser.add_argument('--fast', action="store_true", dest="fast", help="Don't visualize, VERY FAST")
+parser.set_defaults(feature=False)
 args = parser.parse_args()
 
 
@@ -115,7 +117,7 @@ with file("transpoints.txt","w") as f:
             if state in ["desk","cabinet","room"]:
                 center_of_mass = tuple(prev_com)
 
-        room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
+        if not args.fast: room.draw(swc1, swc2, center_of_mass, office_activity, cab_activity, door_activity)
 
         
 
@@ -168,22 +170,23 @@ with file("transpoints.txt","w") as f:
         # SHOW
         # Fast
         # im3 = clip(im3,office)
-        # try:
-        #     cv2.imshow("Frame", room.image)
-        #     cv2.imshow("Final", binaryroom.image)
-        #     # if x%100 in [3,4,5] and False:
-        #     #     cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
-        #     #     cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
+        if not args.fast:
+            try:
+                cv2.imshow("Frame", room.image)
+                cv2.imshow("Final", binaryroom.image)
+                # if x%100 in [3,4,5] and False:
+                #     cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
+                #     cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
 
-        # except:
-        #     pass
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
-            break
-            print "RMSE (in pixels)" , np.sqrt(np.average(errors))
-            print "Missdetected frames", miss_detections
-            print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
-            print "INS AN OUTS" ,in_to_out, intoout, out_to_in, outtoin
+            except:
+                pass
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                break
+                print "RMSE (in pixels)" , np.sqrt(np.average(errors))
+                print "Missdetected frames", miss_detections
+                print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
+                print "INS AN OUTS" ,in_to_out, intoout, out_to_in, outtoin
 
         x+=1
 
