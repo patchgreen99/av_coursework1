@@ -35,9 +35,10 @@ positions = []
 
 out_c, desk_c, cabinet_c, not_desk_c = 0,0,0,0
 in_to_out, out_to_in = 0,0
+intoout,outtoin = [], []
 with file("transpoints.txt","w") as f:
     x=args.f
-    for waittime,im3,im4,im_label in getimages(args):
+    for waittime,im3,im4,im_label,frame_name in getimages(args):
         prev_com = center_of_mass
         room.image = im3
 
@@ -141,7 +142,9 @@ with file("transpoints.txt","w") as f:
         
         if old_state == "outside" and state != "outside":
             out_to_in += 1
+            outtoin.append(frame_name)
         if old_state != "outside" and state == "outside":
+            intoout.append(frame_name)
             in_to_out += 1
 
         if not center_of_mass:
@@ -165,28 +168,30 @@ with file("transpoints.txt","w") as f:
         # SHOW
         # Fast
         # im3 = clip(im3,office)
-        try:
-            cv2.imshow("Frame", room.image)
-            cv2.imshow("Final", binaryroom.image)
-            # if x%100 in [3,4,5] and False:
-            #     cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
-            #     cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
+        # try:
+        #     cv2.imshow("Frame", room.image)
+        #     cv2.imshow("Final", binaryroom.image)
+        #     # if x%100 in [3,4,5] and False:
+        #     #     cv2.imwrite("output2/" + str(x)+ "_frame.png", room.image)
+        #     #     cv2.imwrite("output2/" + str(x)+ "_binary.png", binaryroom.image)
 
-        except:
-            pass
+        # except:
+        #     pass
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
             print "RMSE (in pixels)" , np.sqrt(np.average(errors))
             print "Missdetected frames", miss_detections
-            print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c, in_to_out,out_to_in
+            print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
+            print "INS AN OUTS" ,in_to_out, intoout, out_to_in, outtoin
 
         x+=1
 
 
     print "RMSE (in pixels)" , np.sqrt(np.average(errors)), "in ", len(errors), " labeled images"
     print "Missdetected frames", miss_detections
-    print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c,in_to_out,out_to_in
+    print "COUTNS", out_c, desk_c, cabinet_c, not_desk_c
+    print "INS AN OUTS" ,in_to_out, intoout, out_to_in, outtoin
         # Cool
         # im1,im2,im3,im4 =
         # try:
@@ -200,7 +205,7 @@ with file("transpoints.txt","w") as f:
         # 	pass
 
 
-for waittime,im3,im4,im_label in getimages(args):
+for waittime,im3,im4,im_label,f_name in getimages(args):
     frst = None
     second = None
     while len(positions) > 0:
@@ -209,5 +214,5 @@ for waittime,im3,im4,im_label in getimages(args):
         if frst and second:
             cv2.line(im3, tuple(frst), tuple(second), (0,0,255), 1)
         if second: frst = second
-    cv2.imwrite("movement.jpg", im3)
+    cv2.imwrite("movementx.jpg", im3)
     break

@@ -101,7 +101,7 @@ def getimages(args):
             im2 = cv2.imread(images[x + 1])
 
 
-        yield waittime, im3, im4 , label
+        yield waittime, im3, im4 , label, os.path.basename(orig[x + 1])
 
 
 

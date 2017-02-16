@@ -20,3 +20,14 @@ RMSE (in pixels) 80.3169456884 in  85  labeled images
 Missdetected frames []
 COUTNS 1309 5324 36 1394 
 2 2
+
+
+
+RMSE (in pixels) 80.3169456884 in  85  labeled images
+Missdetected frames []
+COUTNS 1309 5324 36 1394
+INS AN OUTS 
+INTOOUT 2 ['inspacecam163_2016_02_19_13_02_40.jpg', 'inspacecam163_2016_02_19_13_33_43.jpg'] 
+
+OUTTOIN 2 ['inspacecam163_2016_02_19_13_05_59.jpg', 'inspacecam163_2016_02_19_13_54_39.jpg']
+
